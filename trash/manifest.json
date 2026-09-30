@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Cadastramento de Lista de Diversos",
+  "version": "2.0",
+  "description": "Extensão para automatizar o cadastramento de listas de diversos com preenchimento automático e submissão de formulários",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "background"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Cadastramento de Lista de Diversos"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["*://*/*"]
+    }
+  ]
+}

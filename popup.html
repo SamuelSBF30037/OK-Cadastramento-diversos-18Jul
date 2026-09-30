@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastramento de Lista de Diversos</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 420px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--gray-800);
+            line-height: 1.5;
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: var(--radius);
+            margin: 8px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .container.minimized {
+            margin: 4px;
+            border-radius: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .header.minimized {
+            padding: 8px 12px;
+            border-radius: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .save-status {
+            font-size: 10px;
+            opacity: 0.8;
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .save-status.saving {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .save-status.saved {
+            background: var(--success);
+        }
+
+        .save-status.error {
+            background: var(--error);
+        }
+
+        .minimize-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .minimize-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Progress Bar Minimizada */
+        .progress-mini {
+            background: rgba(255, 255, 255, 0.2);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 8px;
+            flex: 1;
+            transition: var(--transition);
+        }
+
+        .progress-mini-fill {
+            height: 100%;
+            background: white;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-mini-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: shine 2s infinite;
+        }
+
+        .progress-text {
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            transition: var(--transition);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .main-content.hidden {
+            max-height: 0;
+            padding: 0 20px;
+            opacity: 0;
+        }
+
+        /* Auto-save indicator */
+        .autosave-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--success);
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .autosave-indicator.show {
+            opacity: 1;
+        }
+
+        .autosave-indicator.saving {
+            background: var(--warning);
+        }
+
+        .autosave-indicator.error {
+            background: var(--error);
+        }
+
+        /* Wizard Steps */
+        .wizard-container {
+            position: relative;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .wizard-steps::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            height: 2px;
+            background: var(--gray-200);
+            z-index: 1;
+        }
+
+        .wizard-steps::after {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            height: 2px;
+            background: var(--primary);
+            z-index: 2;
+            transition: width 0.3s ease;
+        }
+
+        .wizard-steps.step-1::after { width: 0%; }
+        .wizard-steps.step-2::after { width: 50%; }
+        .wizard-steps.step-3::after { width: 100%; }
+
+        .wizard-step {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-500);
+            position: relative;
+            z-index: 3;
+            transition: var(--transition);
+        }
+
+        .wizard-step.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .wizard-step.completed {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+
+        .wizard-step-label {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--gray-600);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .wizard-step.active .wizard-step-label {
+            color: var(--primary);
+        }
+
+        .wizard-step.completed .wizard-step-label {
+            color: var(--success);
+        }
+
+        /* Step Content */
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        .step-header {
+            margin-bottom: 16px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 4px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Input Container */
+        .input-container {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .input-area {
+            position: relative;
+            min-height: 120px;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            background: var(--gray-50);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .input-area:hover {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .input-area.focused {
+            border-color: var(--primary);
+            background: #eff6ff;
+            border-style: solid;
+        }
+
+        .input-area.has-content {
+            border-style: solid;
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        .input-textarea {
+            width: 100%;
+            height: 120px;
+            border: none;
+            background: transparent;
+            resize: vertical;
+            padding: 16px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--gray-700);
+            outline: none;
+        }
+
+        .input-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--gray-500);
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .input-placeholder.hidden {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .input-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--gray-50);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .input-count {
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Input with save indicator */
+        .input-with-indicator {
+            position: relative;
+        }
+
+        .input-save-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .input-save-indicator.show {
+            opacity: 1;
+        }
+
+        /* Standard Input */
+        .standard-input {
+            width: 100%;
+            min-height: 100px;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius);
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--gray-700);
+            background: white;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        .standard-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .standard-input.has-content {
+            border-color: var(--success);
+            background: #f0fdf4;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-error {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-error:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        /* Save shortcuts help */
+        .save-help {
+            font-size: 11px;
+            color: var(--gray-500);
+            text-align: center;
+            margin-top: 8px;
+            padding: 4px;
+            background: var(--gray-50);
+            border-radius: 4px;
+        }
+
+        /* Processing View */
+        .processing-view {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .processing-view.active {
+            display: block;
+        }
+
+        .processing-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: bounce 1s infinite;
+        }
+
+        .processing-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+
+        .processing-description {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 20px;
+        }
+
+        .progress-full {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shine 2s infinite;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .stat-success .stat-icon { background: var(--success); }
+        .stat-error .stat-icon { background: var(--error); }
+        .stat-pending .stat-icon { background: var(--warning); }
+
+        /* Log */
+        .log-container {
+            margin-top: 16px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius);
+            background: var(--gray-50);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .log-header {
+            padding: 8px 12px;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray-700);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .log-content {
+            padding: 8px 12px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            font-size: 11px;
+            color: var(--gray-600);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .log-item.success { color: var(--success); }
+        .log-item.error { color: var(--error); }
+        .log-item.processing { color: var(--warning); }
+
+        /* Submit Options */
+        .submit-options {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+        }
+
+        .submit-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .submit-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .submit-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .submit-option label {
+            font-size: 13px;
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.3s ease; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <!-- Indicador de salvamento automático -->
+        <div class="autosave-indicator" id="autoSaveIndicator">💾 Salvando dados...</div>
+        
+        <!-- Cabeçalho -->
+        <div class="header" id="header">
+            <div class="header-left">
+                <div class="logo">📋 Cadastro de Diversos</div>
+                <div class="status-indicator" id="statusIndicator"></div>
+                <div class="save-status" id="saveStatus">Salvo</div>
+            </div>
+            <div class="header-right">
+                <!-- Barra de progresso mini (mostrada durante processamento) -->
+                <div class="progress-mini hidden" id="progressMini">
+                    <div class="progress-mini-fill" id="progressMiniFill"></div>
+                </div>
+                <div class="progress-text hidden" id="progressText">0/0</div>
+                <button class="minimize-btn" id="minimizeBtn" title="Minimizar janela">
+                    <span id="minimizeIcon">−</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo principal -->
+        <div class="main-content" id="mainContent">
+            <!-- Assistente de cadastro -->
+            <div class="wizard-container" id="wizardContainer">
+                <!-- Indicadores de etapas -->
+                <div class="wizard-steps step-1" id="wizardSteps">
+                    <div class="wizard-step active" id="step1">
+                        <span>1</span>
+                        <div class="wizard-step-label">Identificadores</div>
+                    </div>
+                    <div class="wizard-step" id="step2">
+                        <span>2</span>
+                        <div class="wizard-step-label">Conteúdo</div>
+                    </div>
+                    <div class="wizard-step" id="step3">
+                        <span>3</span>
+                        <div class="wizard-step-label">Executar</div>
+                    </div>
+                </div>
+
+                <!-- Etapa 1: Identificadores -->
+                <div class="step-content active" id="stepContent1">
+                    <div class="step-header">
+                        <div class="step-title">📋 Lista de Identificadores</div>
+                        <div class="step-description">
+                            Cole os identificadores que serão cadastrados (aceita vírgulas, quebras de linha ou formato misto)
+                        </div>
+                    </div>
+                    
+                    <div class="input-container input-with-indicator">
+                        <div class="input-area" id="identifierInputArea">
+                            <textarea 
+                                id="identifierTextarea" 
+                                class="input-textarea" 
+                                placeholder=""
+                                spellcheck="false"
+                            ></textarea>
+                            <div class="input-placeholder" id="identifierPlaceholder">
+                                <div style="font-size: 24px; margin-bottom: 8px;">📝</div>
+                                <div><strong>Cole os identificadores aqui</strong></div>
+                                <div style="font-size: 11px; margin-top: 4px;">
+                                    Exemplo: 32032, 12345, 67890 ou um por linha
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-save-indicator" id="identifierSaveIndicator">💾</div>
+                        
+                        <div class="input-stats">
+                            <span id="identifierCount" class="input-count">0 identificadores detectados</span>
+                            <span id="identifierValidation" style="font-size: 11px;"></span>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" id="normalizeBtn">
+                            🔧 Normalizar Lista
+                        </button>
+                        <button class="btn btn-primary" id="nextStep1" disabled>
+                            Próximo →
+                        </button>
+                    </div>
+                    
+                    <div class="save-help">
+                        💡 Ctrl+S para salvar manualmente • Salvamento automático ativo
+                    </div>
+                </div>
+
+                <!-- Etapa 2: Conteúdo -->
+                <div class="step-content" id="stepContent2">
+                    <div class="step-header">
+                        <div class="step-title">📝 Conteúdo Padrão</div>
+                        <div class="step-description">
+                            Digite o conteúdo que será usado para todos os identificadores
+                        </div>
+                    </div>
+                    
+                    <div class="input-with-indicator">
+                        <textarea 
+                            id="contentInput" 
+                            class="standard-input" 
+                            placeholder="Digite o conteúdo que será aplicado a todos os identificadores..."
+                            spellcheck="false"
+                        ></textarea>
+                        <div class="input-save-indicator" id="contentSaveIndicator">💾</div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" id="prevStep2">
+                            ← Voltar
+                        </button>
+                        <button class="btn btn-primary" id="nextStep2" disabled>
+                            Próximo →
+                        </button>
+                    </div>
+                    
+                    <div class="save-help">
+                        💡 Ctrl+S para salvar manualmente • Salvamento automático ativo
+                    </div>
+                </div>
+
+                <!-- Etapa 3: Confirmar e Executar -->
+                <div class="step-content" id="stepContent3">
+                    <div class="step-header">
+                        <div class="step-title">🚀 Confirmar e Executar</div>
+                        <div class="step-description">
+                            Revise as configurações e inicie o processo de cadastramento
+                        </div>
+                    </div>
+                    
+                    <!-- Resumo das configurações -->
+                    <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius); margin-bottom: 16px;">
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--gray-700);">📋 Identificadores:</strong>
+                            <span id="summaryIdentifierCount" style="color: var(--success);">0 itens</span>
+                        </div>
+                        <div>
+                            <strong style="color: var(--gray-700);">📝 Conteúdo:</strong>
+                            <span id="summaryContentLength" style="color: var(--success);">0 caracteres</span>
+                        </div>
+                    </div>
+
+                    <!-- Opções de submissão -->
+                    <div class="submit-options">
+                        <div style="margin-bottom: 12px; font-weight: 600; color: var(--gray-700);">⚙️ Opções de Submissão</div>
+                        
+                        <div class="submit-option">
+                            <input type="checkbox" id="autoSubmitOption" checked>
+                            <label for="autoSubmitOption">Submeter automaticamente após preenchimento</label>
+                        </div>
+                        
+                        <div class="submit-option">
+                            <input type="checkbox" id="waitModalOption" checked>
+                            <label for="waitModalOption">Aguardar e fechar modais automaticamente</label>
+                        </div>
+                        
+                        <div class="submit-option">
+                            <input type="checkbox" id="delayBetweenOption" checked>
+                            <label for="delayBetweenOption">Intervalo de 3 segundos entre cadastros</label>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" id="prevStep3">
+                            ← Voltar
+                        </button>
+                        <button class="btn btn-success" id="startProcess">
+                            🚀 Iniciar Cadastramento
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualização de processamento -->
+            <div class="processing-view" id="processingView">
+                <div class="processing-icon">⚙️</div>
+                <div class="processing-title">Cadastrando Itens...</div>
+                <div class="processing-description">
+                    O processo está sendo executado em segundo plano. Você pode minimizar esta janela ou trocar de aba.
+                </div>
+                
+                <div class="progress-full">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFull"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="stat-item stat-success">
+                            <div class="stat-icon"></div>
+                            <span>Sucessos: </span>
+                            <span id="successCount">0</span>
+                        </div>
+                        <div class="stat-item stat-error">
+                            <div class="stat-icon"></div>
+                            <span>Erros: </span>
+                            <span id="errorCount">0</span>
+                        </div>
+                        <div class="stat-item stat-pending">
+                            <div class="stat-icon"></div>
+                            <span>Pendentes: </span>
+                            <span id="pendingCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-error" id="stopProcess">
+                        ⏹️ Interromper Processo
+                    </button>
+                </div>
+
+                <!-- Log de execução -->
+                <div class="log-container">
+                    <div class="log-header" id="logHeader">
+                        <span>📋 Registro de Execução</span>
+                        <span id="logToggle">▼</span>
+                    </div>
+                    <div class="log-content" id="logContent">
+                        <div class="log-item">Processo iniciado...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

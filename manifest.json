@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Cadastramento de Lista de Diversos - SICAD",
+  "version": "2.4",
+  "description": "Extensão para automatizar o cadastramento de listas de diversos no SICAD com preenchimento automático, submissão e fechamento de modais",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://sisp.ssp.go.gov.br/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Cadastramento de Lista de Diversos - SICAD"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://sisp.ssp.go.gov.br/Sicad-Sicad-context-root/cadastrarItem.jsp*"],
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
